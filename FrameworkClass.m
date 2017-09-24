@@ -12,12 +12,13 @@ classdef FrameworkClass %   Metaclass
         sunOrbitalParameters = OrbitalParametersClass;
         sunPosition = PositionClass;
         powerHarvesting = PowerHarvestingClass;
+        radioTransmission = RadioTransmissionClass();
     end
     
     methods
         %   Initalize data object from User input data
         %   ****Needs to be rewritten****
-        function data = FrameworkClass(launchDate, satTrueAnomaly, satOrbitalParameters, inertiaTensor, magneticMoment)
+        function data = FrameworkClass(launchDate, satTrueAnomaly, satOrbitalParameters, satelliteStructure, satDynamics)
             if nargin > 0
                 
                 %%   SystemTime Class intialization
@@ -30,8 +31,7 @@ classdef FrameworkClass %   Metaclass
                 data.satelliteOrbitalParameters.epoch = EpochFromMeanAnomaly(data.satelliteOrbitalParameters, data.systemTime);
                 
                 %%   SatelliteStructural Class intialization
-                data.satelliteStructural.satelliteMagneticField_Body = magneticMoment;
-                data.satelliteStructural.inertiaMatrix_Body = inertiaTensor;
+                data.satelliteStructural = satelliteStructure;
                             
                 %%   Sun Orbital Properties Constants
                 % Satellite: SUN
@@ -60,6 +60,12 @@ classdef FrameworkClass %   Metaclass
                 data.sunOrbitalParameters.epoch = Sun_Epoch;
                 data.sunOrbitalParameters.meanAnomaly = MeanAnomalyFromTime(data.sunOrbitalParameters, data.systemTime);
                 data.sunOrbitalParameters.trueAnomaly = TrueAnomalyFromMeanAnomaly(data.sunOrbitalParameters);
+                
+                %%   Radio Transmission
+               
+                %%  SatelliteAttitude Class intialization
+                data.satelliteAttitude = satDynamics;
+                     
             end
         end
     

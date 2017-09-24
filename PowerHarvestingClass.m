@@ -1,6 +1,6 @@
 classdef PowerHarvestingClass
     properties
-        inShadow;               %boolean
+        inEclipse;               %boolean
         solarPanelEfficency;    %m
     end
     
@@ -15,12 +15,12 @@ classdef PowerHarvestingClass
             
             if sunToSatAngle < sunToEarthEdgeAngle
                 if norm(sunToSatVector) > SunPositionObj.distanceFromBodyToOrigin
-                    PowerObj.inShadow = 1;
+                    PowerObj.inEclipse = 1;
                 else
-                    PowerObj.inShadow = 0;
+                    PowerObj.inEclipse = 0;
                 end
             else
-                PowerObj.inShadow = 0;
+                PowerObj.inEclipse = 0;
             end
         end    
     end 

@@ -1,8 +1,8 @@
 classdef PositionClass
     properties
-        distanceFromBodyToOrigin;                 %m  
-        ECI = xyzVectorClass;        %m in IAU2000/2006
-        ECEF = xyzVectorClass;%m
+        distanceFromBodyToOrigin;                   %[m]  
+        ECI = xyzVectorClass;                       %[m] in IAU2000/2006
+        ECEF = xyzVectorClass;                      %[m]
     end
     
     methods

@@ -1,4 +1,4 @@
-function [ systemData ] = RunModel( inputLaunchDate, inputSatTrueAnomaly, inputRunTime, inputTimeStep, inputSatOrbitalParameters, inputInertiaTensor, inputMagneticMoment )
+function [ systemData ] = RunModel( inputLaunchDate, inputSatTrueAnomaly, inputRunTime, inputTimeStep, inputSatOrbitalParameters, inputSatStructural, inputSatAttitude )
 %   Responsible for running the model using the initial conditions
 %   specified when calling this function
 
@@ -12,8 +12,14 @@ function [ systemData ] = RunModel( inputLaunchDate, inputSatTrueAnomaly, inputR
     end
 
     %   Initialize data at launch time = 0 using input data from user
-    systemData(1) = FrameworkClass(inputLaunchDate, inputSatTrueAnomaly, inputSatOrbitalParameters, inputInertiaTensor, inputMagneticMoment);
-
+    systemData(1) = FrameworkClass(inputLaunchDate, inputSatTrueAnomaly, inputSatOrbitalParameters, inputSatStructural, inputSatAttitude);
+    
+    systemData(1).satellitePosition = CalculatePosition(systemData(1).satellitePosition, systemData(1).satelliteOrbitalParameters, systemData(1).systemTime);
+    systemData(1).sunPosition = CalculatePosition(systemData(1).sunPosition, systemData(1).sunOrbitalParameters, systemData(1).systemTime);
+    systemData(1).powerHarvesting = ShadowDetection(systemData(1).powerHarvesting, systemData(1).sunPosition, systemData(1).satellitePosition);
+    systemData(1).earthMagneticField = EarthsMagneticFieldAtPosition(systemData(1).earthMagneticField, systemData(1).satellitePosition, systemData(1).systemTime);
+    systemData(1).radioTransmission = SatelliteToChimeVector(systemData(1).radioTransmission, systemData(1).satellitePosition);
+    
     %%  Iterative Model Operation
     for k = 2:size(systemData)
         %%  Time and Date Data
@@ -28,7 +34,8 @@ function [ systemData ] = RunModel( inputLaunchDate, inputSatTrueAnomaly, inputR
         systemData(k).earthMagneticField = EarthsMagneticFieldAtPosition(systemData(k).earthMagneticField, systemData(k).satellitePosition, systemData(k).systemTime);
 
         %%  Satellites Dynamic Model Propagator
-
+        %systemData(k).satelliteAttitude = CalculateAttitudeTest(systemData(k-1).systemTime, systemData(k).systemTime, systemData(k-1).earthMagneticField, systemData(k-1).satelliteStructural, systemData(k-1).satelliteAttitude);
+        
         %%  Suns Orbital Keplerian Model for shadow detection
         systemData(k).sunOrbitalParameters = OrbitPropagator(systemData(k).sunOrbitalParameters, systemData(k-1).sunOrbitalParameters, systemData(k).systemTime);
         systemData(k).sunPosition = CalculatePosition(systemData(k).sunPosition, systemData(k).sunOrbitalParameters, systemData(k).systemTime);
@@ -37,6 +44,8 @@ function [ systemData ] = RunModel( inputLaunchDate, inputSatTrueAnomaly, inputR
         systemData(k).powerHarvesting = ShadowDetection(systemData(k).powerHarvesting, systemData(k).sunPosition, systemData(k).satellitePosition);
 
         %%  Radio Transmission
+        systemData(k).radioTransmission = SatelliteToChimeVector(systemData(k).radioTransmission, systemData(k).satellitePosition);
+        
         %%  Power Management
     end
 end
