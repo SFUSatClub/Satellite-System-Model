@@ -1,15 +1,4 @@
-classdef SatelliteAttitudeClass
-    properties
-        attitude = EulerVectorClass;        %Pitch, yaw, roll
-        angularVelocity = EulerVectorClass;
-        angularMomentum = EulerVectorClass;
-    end
-    
-    methods
-        
-        %   Old is for previous timestep, new is for current timestep
-        %   attitude is being calculated for
-        function NewAttitudeObj = CalculateAttitude(OldSystemTimeObj, NewSystemTimeObj, OldEarthMagneticField_ECEF, SatelliteStructureObj, OldAttitudeObj)
+function NewAttitudeObj = CalculateAttitudeTest(OldSystemTimeObj, NewSystemTimeObj, OldEarthMagneticField_ECEF, SatelliteStructureObj, OldAttitudeObj)
             
             %   Timestep of system
             TimeStep = NewSystemTimeObj.timeSinceLaunch - OldSystemTimeObj.timeSinceLaunch;
@@ -53,46 +42,4 @@ classdef SatelliteAttitudeClass
             NewAttitudeObj.attitude = [OldAttitudeObj.attitude.pitch; OldAttitudeObj.attitude.yaw; OldAttitudeObj.attitude.roll]...
                                       + TimeStep*Theta_Body_dot;
         end
-    
-        function obj = set.attitude(obj, value)
-            if (isvector(value))
-                obj.attitude.pitch = value(1);
-                obj.attitude.yaw = value(2);
-                obj.attitude.roll = value(3);
-            else
-                error('Input must be a vector')
-            end
-        end
         
-        function obj = set.angularVelocity(obj, value)
-            if (isvector(value))
-                obj.angularVelocity.pitch = value(1);
-                obj.angularVelocity.yaw = value(2);
-                obj.angularVelocity.roll = value(3);
-            else
-                error('Input must be a vector')
-            end
-        end
-        
-        function obj = set.angularMomentum(obj, value)
-            if (isvector(value))
-                obj.angularMomentum.pitch = value(1);
-                obj.angularMomentum.yaw = value(2);
-                obj.angularMomentum.roll = value(3);
-            else
-                error('Input must be a vector')
-            end
-        end
-        
-        %   Constructor for intial conditions
-        function data = SatelliteAttitudeClass(Attitude, AngularVelocity, AngularMomentum)
-            if nargin == 0 %    if number of input args to function is 0 return an empty class
-            else %  Populate class with the constant orbital parameters provided
-                %   SatelliteAttitudeClass intialization
-                data.attitude = Attitude;
-                data.angularVelocity = AngularVelocity;
-                data.angularMomentum = AngularMomentum;
-            end
-        end
-    end   
-end

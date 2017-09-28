@@ -34,7 +34,7 @@ function [ systemData ] = RunModel( inputLaunchDate, inputSatTrueAnomaly, inputR
         systemData(k).earthMagneticField = EarthsMagneticFieldAtPosition(systemData(k).earthMagneticField, systemData(k).satellitePosition, systemData(k).systemTime);
 
         %%  Satellites Dynamic Model Propagator
-        %systemData(k).satelliteAttitude = CalculateAttitudeTest(systemData(k-1).systemTime, systemData(k).systemTime, systemData(k-1).earthMagneticField, systemData(k-1).satelliteStructural, systemData(k-1).satelliteAttitude);
+        %systemData(k).satelliteAttitude = CalculateAttitude(systemData(k-1).systemTime, systemData(k).systemTime, systemData(k-1).earthMagneticField, systemData(k-1).satelliteStructural, systemData(k-1).satelliteAttitude);
         
         %%  Suns Orbital Keplerian Model for shadow detection
         systemData(k).sunOrbitalParameters = OrbitPropagator(systemData(k).sunOrbitalParameters, systemData(k-1).sunOrbitalParameters, systemData(k).systemTime);

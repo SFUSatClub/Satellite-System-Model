@@ -14,6 +14,10 @@ classdef EarthMagneticFieldClass
             earthMagneticFieldObject.earthMagneticField_ECEF = [Bx, By, Bz];
         end
         
+        function TimeStep = TimeStepCalc(OldSystemTimeObj, NewSystemTimeObj)
+            TimeStep = NewSystemTimeObj.timeSinceLaunch - OldSystemTimeObj.timeSinceLaunch;
+        end
+        
         function obj = set.earthMagneticField_ECEF(obj, value)
             if (isvector(value))
                 obj.earthMagneticField_ECEF.x = value(1);
