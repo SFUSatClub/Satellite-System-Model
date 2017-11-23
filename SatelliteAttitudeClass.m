@@ -9,7 +9,7 @@ classdef SatelliteAttitudeClass
         
         %   Old is for previous timestep, new is for current timestep
         %   attitude is being calculated for
-        function NewAttitudeObj = CalculateAttitude(OldSystemTimeObj, NewSystemTimeObj, OldEarthMagneticField_ECEF, SatelliteStructureObj, OldAttitudeObj)
+        function NewAttitudeObj = AttitudePropagator(NewAttitudeObj, OldSystemTimeObj, NewSystemTimeObj, OldEarthMagneticField_ECEF, OldSatelliteStructureObj, OldAttitudeObj)
             
             %   Timestep of system
             TimeStep = NewSystemTimeObj.timeSinceLaunch - OldSystemTimeObj.timeSinceLaunch;
@@ -25,14 +25,14 @@ classdef SatelliteAttitudeClass
             EarthMagneticField_Body = ECI2Body_DCM * (ECEF2ECI_DCM * OldEarthMagneticField_ECEF.earthMagneticField_ECEF);
             
             %   Calculating Mu vector of satellite in Body
-            SatelliteMu_Body = SatelliteStructureObj.satelliteMagneticField_Body + (SatelliteStructureObj.satelliteHysteresisRod1_Body ...
-                               + SatelliteStructureObj.satelliteHysteresisRod2_Body);
+            SatelliteMu_Body = OldSatelliteStructureObj.satelliteMagneticField_Body + (OldSatelliteStructureObj.satelliteHysteresisRod1.m ...
+                               + OldSatelliteStructureObj.satelliteHysteresisRod2.m);
                            
             %   Torque acting on satellite in Body frame from Magnetic Force               
             MagneticTorque_Body = cross(SatelliteMu_Body, EarthMagneticField_Body);
             
             %   AngularVelocity derivative
-            AngularVelocity_Body_dot = transpose(SatelliteStructureObj.inertiaMatrix_Body)*transpose((-MagneticTorque_Body ... %Need to transpose to match matrix dimensions for multiplication
+            AngularVelocity_Body_dot = transpose(OldSatelliteStructureObj.inertiaMatrix_Body)*transpose((-MagneticTorque_Body ... %Need to transpose to match matrix dimensions for multiplication
                                   - cross([OldAttitudeObj.angularVelocity.pitch, OldAttitudeObj.angularVelocity.yaw, OldAttitudeObj.angularVelocity.roll],...
                                           [OldAttitudeObj.angularMomentum.pitch, OldAttitudeObj.angularMomentum.yaw, OldAttitudeObj.angularMomentum.roll])));
                               
@@ -41,11 +41,15 @@ classdef SatelliteAttitudeClass
             NewAttitudeObj.angularVelocity = [OldAttitudeObj.angularVelocity.pitch; OldAttitudeObj.angularVelocity.yaw; OldAttitudeObj.angularVelocity.roll]...
                                              + TimeStep*AngularVelocity_Body_dot;
             
+            %   Compute new angular momentum corresponding to new angular
+            %   velocity
+            NewAttitudeObj.angularMomentum = OldSatelliteStructureObj.inertiaMatrix_Body*NewAttitudeObj.angularVelocity;
+            
             %   Finding derivative of angular position
-            Theta_Body_dot = [0, OldAttitudeObj.attitude.yaw, -OldAttitudeObj.attitude.pitch
-                              -OldAttitudeObj.attitude.yaw, 0, OldAttitudeObj.attitude.roll
-                              OldAttitudeObj.attitude.pitch, -OldAttitudeObj.attitude.roll, 0]...
-                              * [OldAttitudeObj.attitude.pitch; OldAttitudeObj.attitude.yaw; OldAttitudeObj.attitude.roll];
+            Theta_Body_dot = [0, OldAttitudeObj.angularVelocity.yaw, -OldAttitudeObj.angularVelocity.pitch
+                              -OldAttitudeObj.angularVelocity.yaw, 0, OldAttitudeObj.angularVelocity.roll
+                              OldAttitudeObj.angularVelocity.pitch, -OldAttitudeObj.angularVelocity.roll, 0]...
+                              * [OldAttitudeObj.angularVelocity.pitch; OldAttitudeObj.angularVelocity.yaw; OldAttitudeObj.angularVelocity.roll];
                     
             %   New angular position in Body calculated from angular
             %   position derivative * timestep added to previous timestep

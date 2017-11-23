@@ -16,7 +16,7 @@ function [ systemData ] = RunModel( inputLaunchDate, inputSatTrueAnomaly, inputR
     
     systemData(1).satellitePosition = CalculatePosition(systemData(1).satellitePosition, systemData(1).satelliteOrbitalParameters, systemData(1).systemTime);
     systemData(1).sunPosition = CalculatePosition(systemData(1).sunPosition, systemData(1).sunOrbitalParameters, systemData(1).systemTime);
-    systemData(1).powerHarvesting = ShadowDetection(systemData(1).powerHarvesting, systemData(1).sunPosition, systemData(1).satellitePosition);
+    systemData(1).powerHarvesting = CalculateInstantaneousPower(systemData(1).powerHarvesting, systemData(1).sunPosition, systemData(1).satellitePosition, systemData(1).satelliteAttitude);
     systemData(1).earthMagneticField = EarthsMagneticFieldAtPosition(systemData(1).earthMagneticField, systemData(1).satellitePosition, systemData(1).systemTime);
     systemData(1).radioTransmission = SatelliteToChimeVector(systemData(1).radioTransmission, systemData(1).satellitePosition);
     
@@ -32,16 +32,22 @@ function [ systemData ] = RunModel( inputLaunchDate, inputSatTrueAnomaly, inputR
 
         %%  IGRF Model (Earths Magnetic Field Model)
         systemData(k).earthMagneticField = EarthsMagneticFieldAtPosition(systemData(k).earthMagneticField, systemData(k).satellitePosition, systemData(k).systemTime);
-
+        
         %%  Satellites Dynamic Model Propagator
-        %systemData(k).satelliteAttitude = CalculateAttitude(systemData(k-1).systemTime, systemData(k).systemTime, systemData(k-1).earthMagneticField, systemData(k-1).satelliteStructural, systemData(k-1).satelliteAttitude);
+        % We won't know the current attitude when computing reference
+        % frames for torque and such, so we use the last iteration's field
+        % and time and structural data for that.
+        systemData(k).satelliteAttitude = AttitudePropagator(systemData(k).satelliteAttitude, systemData(k-1).systemTime, systemData(k).systemTime, systemData(k-1).earthMagneticField, systemData(k-1).satelliteStructural, systemData(k-1).satelliteAttitude);
+        
+        %%  Hysteresis Effect
+        systemData(k).satelliteStructural = CalculateHysteresisEffects(systemData(k-1).satelliteStructural, systemData(k).systemTime, systemData(k).satelliteAttitude, systemData(k).earthMagneticField);
         
         %%  Suns Orbital Keplerian Model for shadow detection
         systemData(k).sunOrbitalParameters = OrbitPropagator(systemData(k).sunOrbitalParameters, systemData(k-1).sunOrbitalParameters, systemData(k).systemTime);
         systemData(k).sunPosition = CalculatePosition(systemData(k).sunPosition, systemData(k).sunOrbitalParameters, systemData(k).systemTime);
 
         %%  Power Harvesting
-        systemData(k).powerHarvesting = ShadowDetection(systemData(k).powerHarvesting, systemData(k).sunPosition, systemData(k).satellitePosition);
+        systemData(k).powerHarvesting = CalculateInstantaneousPower(systemData(k).powerHarvesting, systemData(k).sunPosition, systemData(k).satellitePosition, systemData(k).satelliteAttitude);
 
         %%  Radio Transmission
         systemData(k).radioTransmission = SatelliteToChimeVector(systemData(k).radioTransmission, systemData(k).satellitePosition);
