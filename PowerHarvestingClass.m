@@ -30,7 +30,7 @@ classdef PowerHarvestingClass
             end
         end
         
-        function PowerObj = CalculateInstantaneousPower(PowerObj, SunPositionObj, SatPositionObj, AttitudeDCM)
+        function PowerObj = CalculateInstantaneousPower(PowerObj, SunPositionObj, SatPositionObj, SatAttitudeObj)
             
             if (PowerObj.inEclipse)
                 PowerObj.Wout = 0.0;
@@ -43,11 +43,14 @@ classdef PowerHarvestingClass
             C = [0  0  1]';
             D = [0  0 -1]';
             
+            ECI2Body_DCM = R3DCM(SatAttitudeObj.attitude.yaw) * R2DCM(SatAttitudeObj.attitude.pitch) * R1DCM(SatAttitudeObj.attitude.roll);
+            Body2ECI_DCM = transpose(ECI2Body_DCM);
+            
             % Attitude-rotated face vectors in ECI
-            Ag = AttitudeDCM*A; 
-            Bg = AttitudeDCM*B;
-            Cg = AttitudeDCM*C;
-            Dg = AttitudeDCM*D;
+            Ag = Body2ECI_DCM*A; 
+            Bg = Body2ECI_DCM*B;
+            Cg = Body2ECI_DCM*C;
+            Dg = Body2ECI_DCM*D;
             
             AM0 = 135.3; %[mW/cm^2] Standard value for solar radiation
             
