@@ -40,23 +40,32 @@ SatAttitudeParameters = SatelliteAttitudeClass(Attitude, Angular_Velocity, Angul
 Results = RunModel(Launch_Date, Sat_Starting_True_Anomaly, RunTime, TimeStep, SatOrbitalParameters, SatStructuralParameters, SatAttitudeParameters);
 toc;
 
+fileID = fopen('stk_results.e','w');
+fprintf(fileID, 'stk.v.11.0');
+fprintf(fileID, 'BEGIN Ephemeris');EphemerisTimePos
+fprintf(fileID, 'ScenarioEpoch %s.0', strrep(Launch_Date, '-', ' '));
+fprintf(fileID, 'CentralBody Earth');
+fprintf(fileID, 'CoordinateSystem Inertial');
+fprintf(fileID, 'CoordinateSystemEpoch 1 Jan 2000 12:00:00.0');
+fprintf(fileID, 'NumberofEphemerisPoints %d', size(Results));
+fprintf(fileID, 'TimeFormat JDate');
+positions = [Results.satellitePosition.ECI];
 times = [Results.systemTime];
-ts = [times.timeSinceLaunch];
-satAts = [Results.satelliteAttitude];
-atts = [satAts.attitude];
-pow = [Results.powerHarvesting];
-plot([times.timeSinceLaunch], [atts.pitch]);
-hold on
-plot([times.timeSinceLaunch], [atts.yaw]);
-hold on
-plot([times.timeSinceLaunch], [atts.roll]);
-hold on
-plot([times.timeSinceLaunch], [pow.Wout]);
-hold on
-legend('Pitch','Yaw','Roll', 'Wout');
+fprintf(fileID,'%s %f.6 %f.6 %f.6\n',[strrep(times.dateAndTime, '-', ' '),positions.x,positions.y,positions.z]);
+fprintf(fileID, 'END Ephemeris');
+fclose(fileID);
 
-Wh = 0;
-for W = [pow.Wout]
-    Wh = Wh + W*(0.00278);
-end
-Wh
+fileID = fopen('stk_results.a','w');
+fprintf(fileID, 'stk.v.11.0');
+fprintf(fileID, 'BEGIN Attitude');
+fprintf(fileID, 'ScenarioEpoch %s.0', strrep(Launch_Date, '-', ' '));
+fprintf(fileID, 'CentralBody Earth');
+fprintf(fileID, 'CoordinateSystem Inertial');
+fprintf(fileID, 'CoordinateSystemEpoch 1 Jan 2000 12:00:00.0');
+fprintf(fileID, 'NumberofEphemerisPoints %d', size(Results));
+fprintf(fileID, 'TimeFormat JDate');
+attitudes = [Results.satelliteAttitude];
+attitude = attitudes.attitude;
+fprint(fileID,'%s %f.6 %f.6 %f.6',[strrep(times.dateAndTime, '-', ' '), attitude.pitch, attitude.yaw, attitude.roll]);
+fprintf(fileID, 'END Attitude');
+fclose(fileID);
